@@ -31,6 +31,6 @@ struct pseudo_header {
 
 unsigned short csum(unsigned short *ptr, int nbytes);
 
-int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR, int assignedPort);
+int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR);
 
 #endif // EVIL_BIT_H

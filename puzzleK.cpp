@@ -47,13 +47,13 @@ int getPort(std::vector<int> ports, const char* ip, int part) {
                 std::cout << "\nReceived message from port " << port << ": " << recvBuffer << std::endl;
                 close(udpsock);
                 return port;
-            } else if (part == 2 && strstr(recvBuffer, "Send me a 4-byte message containing the signature you got from S.E.C.R.E.T in the first 4 bytes (in network byte order).")) {
+            } else if (part == 2 && strstr(recvBuffer, "Hello group 99! To get the secret phrase, reply to this message with a UDP message where the payload is a encapsulated")) {
                 std::cout << "\nReceived message from port " << port << ": " << recvBuffer << std::endl;
                 close(udpsock);
                 return port;
-            }
+            } else continue;
             
-        }
+        } else continue;  
     }
     std::cerr << "Error getting port" << std::endl;
     return -1;
@@ -101,8 +101,7 @@ int main(int argc, char* argv[]) {
     std::cout << "\n --------- Part 2: Get the secret phrase ---------\n" << std::endl;
     // Hér kemur virknin í ipv4.cpp og við skilum secret phrase
     int secretPhrasePort = getPort(openPorts, ipAddress, 2);
-    
-
+    std::cout << secretPhrasePort << std::endl;
     
 
     // hér skilum við secret phrase

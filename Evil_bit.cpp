@@ -1,67 +1,5 @@
-#include <cstdlib>
-#include <unistd.h> // this header defines miscellaneous symbolic constants and types, and declares miscellaneous functions
-#include <sys/socket.h> // defines the following macros to gain access to the data arrays in the ancillary data associated with a message header
-#include <netinet/in.h> // defines the IN6ADDR_ANY_INIT macro
-#include <netinet/ip.h>
-#include <arpa/inet.h>
-#include <netinet/tcp.h>
-#include <iostream> //declares objects that control reading from and writing to the standard streams
-#include <cstring> //tracks the string length for faster performance, but it also retains the NULL character in the stored character data to support conversion to LPCWSTR
-#include <string>
-#include <netinet/udp.h>
-#include <vector>
-
-struct udp_header {
-    uint16_t src_port;
-    uint16_t dest_port;
-    uint16_t len;
-    uint16_t checksum;
-};
-
-struct pseudo_header
-{
-	u_int32_t source_address;
-	u_int32_t dest_address;
-	u_int8_t placeholder;
-	u_int8_t protocol;
-	u_int16_t udp_length;
-};
-
-int createUDPSocket() {
-    int udpsock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (udpsock < 0) {
-        perror("Error creating UDP socket ");
-    }
-    return udpsock;
-}
-
-void configureServerAddr(struct sockaddr_in &serverAddr, const char* ip, int port) {
-    memset(&serverAddr, 0, sizeof(serverAddr));
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(port);
-    inet_pton(AF_INET, ip, &serverAddr.sin_addr);
-}
-
-bool setSocketTimeout(int socket, int seconds, int microseconds) {
-    struct timeval timeout;
-    timeout.tv_sec = seconds;
-    timeout.tv_usec = microseconds;
-    return setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) >= 0;
-}
-
-bool sendUDPMessage(int udpsock, const char* msg, size_t msgSize, const struct sockaddr_in &serverAddr) {
-    return sendto(udpsock, msg, msgSize, 0, (const struct sockaddr*)&serverAddr, sizeof(serverAddr)) >= 0;
-}
-
-
-int receiveUDPMessage(int udpsock, char *buffer, size_t bufSize, struct sockaddr_in &serverAddr) {
-    socklen_t addr_size = sizeof(serverAddr);
-    int bytes = recvfrom(udpsock, buffer, bufSize, 0, (struct sockaddr*)&serverAddr, &addr_size);
-    if (bytes > 0) {
-        buffer[bytes] = '\0'; // Null-terminate the received string
-    }
-    return bytes;
-}
+#include "Evil_bit.h" // For std::pair
+#include "Port_talker.h"
 
 unsigned short csum(unsigned short *ptr,int nbytes) 
 {
@@ -85,11 +23,16 @@ unsigned short csum(unsigned short *ptr,int nbytes)
 	answer=(short)~sum;
 	
 	return(answer);
-}
+}	
 
-std::pair<int32_t, int> getSecretpackage(const char* ip, int port) {
-    int udpsock = createUDPSocket();
-    if (udpsock < 0) return std::make_pair(-1, -1);
+
+// Þetta er raw port dæmi
+
+int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR) {
+	
+	//Create a UDP socket to send to the port Hi
+	int udpsock = createUDPSocket();
+    if (udpsock < 0) return -1;
 
     struct sockaddr_in serverAddr;
     configureServerAddr(serverAddr, ip, port);
@@ -98,13 +41,13 @@ std::pair<int32_t, int> getSecretpackage(const char* ip, int port) {
     if (!setSocketTimeout(udpsock, 0, 100000)) {
         perror("Error setting options");
         close(udpsock); // Close the socket before returning
-        return std::make_pair(-1, -1);
+        return -1;
     }
 
     if (!sendUDPMessage(udpsock, "Hi", strlen("Hi"), serverAddr)) {
         perror("Error sending data");
         close(udpsock); // Close the socket before returning
-        return std::make_pair(-1, -1);
+        return -1;
     }
 
     // Insert the getsockname call here
@@ -113,51 +56,16 @@ std::pair<int32_t, int> getSecretpackage(const char* ip, int port) {
     if (getsockname(udpsock, (struct sockaddr*)&localAddress, &addressLength) == -1) {
         perror("getsockname");
         close(udpsock);
-        return std::make_pair(-1, -1);
+        return -1;
     }
     int assignedPort = ntohs(localAddress.sin_port);
-    std::cout << "Assigned Source Port: " << assignedPort << std::endl;
+	close(udpsock); // Close the socket
 
 
 
-
-    char recvBuffer[1024];
-    int recvBytes = receiveUDPMessage(udpsock, recvBuffer, sizeof(recvBuffer), serverAddr);
-    if (recvBytes > 0) {
-    std::cout << "Received first message from port no. " << port << ": " << recvBuffer << "\n---------------------------------------------------\n" << std::endl;
-        uint8_t groupNo = 99;  //25 //99
-        if (sendto(udpsock, &groupNo, sizeof(groupNo), 0, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
-            perror("Error sending group number");
-            return std::make_pair(-1, -1);
-        }
-
-        uint32_t fourByteChallenge; 
-        int msgBytes = receiveUDPMessage(udpsock, (char*) &fourByteChallenge, sizeof(fourByteChallenge), serverAddr);
-        
-        // þetta er fyrir Greetings portið
-        if (msgBytes == sizeof(fourByteChallenge)) {
-            fourByteChallenge = ntohl(fourByteChallenge);
-            std::cout << "Received second message from port no. " << port << ": " << fourByteChallenge << "\n---------------------------------------------------\n" << std::endl;
-            
-            uint32_t secret = 0xbdcedd8c;    // 0xbdcedd8c
-            uint32_t signature = fourByteChallenge ^ secret; // htonl(3164325502 ^ 0xbdcedd8c)
-           // signature = htonl(signature); ekki htnl því það er bara fyrir send
-            close(udpsock); // Close the socket before returning
-            return std::make_pair(signature, assignedPort); // Return the signature and the assignedPort
-            }
-        }
-
-        close(udpsock); // Close the socket before returning
-        return std::make_pair(-1, -1); // Return -1 if we didn't receive the challenge or any other error conditions. 
-    }
-
-
-// Þetta er raw port dæmi
-
-int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR, int assignedPort) {
     //Create a raw socket of type IPPROTO
-	int s = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
-	if(s == -1)
+	int raw_socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+	if(raw_socket == -1)
 	{
 		//socket creation failed, may be because of non-root privileges
 		perror("Failed to create raw socket");
@@ -178,20 +86,20 @@ int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR, int assignedPort) 
 	
 	//Data part
 	data = datagram + sizeof(struct iphdr) + sizeof(struct udphdr);
-	u_int32_t networkXOR = htonl(XOR); // Convert to network byte order þetta er S.E.C.R.E.T. XOR signature
+	u_int32_t networkXOR = htonl(22354930); // Convert to network byte order þetta er S.E.C.R.E.T. XOR signature
     memcpy(data, &networkXOR, sizeof(u_int32_t));
 	// Bý til dummy socket
 
-	int udpsock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (udpsock < 0) {
+	int Dummy_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (Dummy_sock < 0) {
         perror("Error creating UDP socket");
         return -1;
     }
 
 	int yes = 1;
-	if (setsockopt(udpsock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) {
+	if (setsockopt(Dummy_sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) {
     	perror("Error setting socket options");
-    	close(udpsock);
+    	close(Dummy_sock);
     	return -1;
 	}
 
@@ -203,9 +111,9 @@ int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR, int assignedPort) 
 
 
 	// Binda dummy socketið
-    if (bind(udpsock, (struct sockaddr*) &localAddr, sizeof(localAddr)) < 0) {
+    if (bind(Dummy_sock, (struct sockaddr*) &localAddr, sizeof(localAddr)) < 0) {
         perror("Error binding UDP socket");
-        close(udpsock);
+        close(Dummy_sock);
         return -1;
     }
 
@@ -263,9 +171,9 @@ int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR, int assignedPort) 
 
 	// connecta áður en ég sendi pakkann og bind líka útaf annars fæ ég aldrei pakkana
 	// Connect to the server
-    if (connect(s, (struct sockaddr*)&sin, sizeof(sin)) < 0) {
+    if (connect(raw_socket, (struct sockaddr*)&sin, sizeof(sin)) < 0) {
         std::cerr << "Error: Could not connect to server." << std::endl;
-        close(s);
+        close(raw_socket);
         return 1;
     }
 
@@ -274,45 +182,40 @@ int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR, int assignedPort) 
 
 	
 
-   // while (true) { // infinite loop to keep listening for new connections
-	//Send the packet
-	if (sendto (s, datagram, iph->tot_len ,	0, (struct sockaddr *) &sin, sizeof (sin)) < 0)
-	{
-		perror("sendto failed");
-	}
-	//Data send successfully
-	else
-	{
-		printf ("Packet Send. Length : %d \n" , iph->tot_len);
-	}
+	// Continue looping until the expected message is received
+while (true) {
+    // Send the packet
+    if (sendto(raw_socket, datagram, iph->tot_len, 0, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
+        std::cerr << "Error: sendto failed with error number " << errno << ". " << std::strerror(errno) << std::endl;
+    } else {
+        std::cout << "Packet sent successfully. Length: " << iph->tot_len << std::endl;
+    }
 
+    // Receive a packet
+    char buffer[1024];
+    socklen_t addrSize = sizeof(localAddr);
+    int bytesReceived = recvfrom(Dummy_sock, buffer, sizeof(buffer), 0, (struct sockaddr*)&localAddr, &addrSize);
+    if (bytesReceived < 0) {
+        perror("Error receiving data");
+        return -1;
+    }
+    buffer[bytesReceived] = '\0'; // Null-terminate the received data
 
-	//Receive a packet
-	char buffer[1024];
-	//struct sockaddr_in senderAddr; // hérna gæti verið villann !!!!!!!!
-	socklen_t addrSize = sizeof(localAddr);
-	int bytesReceived = recvfrom(udpsock, buffer, sizeof(buffer), 0, (struct sockaddr*)&localAddr, &addrSize);
-	if (bytesReceived < 0) {
-		perror("Error receiving data");
-		return -1;
-	}
-	buffer[bytesReceived] = '\0'; // Null-terminate the received data
-	std::cout << "Received message from port "<< port << " is: " << buffer << std::endl;
+    std::cout << "Received message from port "<< port << " is: " << buffer << std::endl;
 
-
-	close(udpsock); // Close the listening socket
-	close(s); // Close the socket before returning
+    // Check for the expected message using strstr()
+    if (strstr(buffer, "Yes, strong in the dark side you are")) {
+		
+		char portStr[5]; // For extracting 4 characters plus null terminator
+        strncpy(portStr, &buffer[bytesReceived - 4], 4);
+        portStr[4] = '\0';  // Null terminate the string
+		std::cout << "Port: " << portStr << std::endl;
+        break; // Exit the loop
+    }
+}
+	close(Dummy_sock); // Close the listening socket
+	close(raw_socket); // Close the socket before returning
 	return 0;
 }
 
-
-int main(int argc, char* argv[]) { 
-    if (argc != 3) { // See if the argument count is correct, should be three
-        std::cerr << "Usage: " << argv[0] << " <IP address> <port>" << std::endl;
-        return 1; //for error
-    }
-    auto [result, assignedPort] = getSecretpackage(argv[1], 4010);
-    getUDPpackageRaw(argv[1],std::stoi(argv[2]),result, assignedPort);
-
-    return 0;
-}
+//getUDPpackageRaw(argv[1],std::stoi(argv[2]),4001);

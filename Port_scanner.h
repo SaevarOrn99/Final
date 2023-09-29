@@ -15,8 +15,6 @@
 #include <string>
 #include <vector>
 
-#include <vector>  // This is necessary because you're using std::vector in the function prototype.
-
 bool is_port_open(const char* ip, int port);
 std::vector<int> get_open_ports(const char* ip, int start_port, int end_port);
 
