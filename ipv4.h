@@ -1,4 +1,3 @@
-// ipv4.h
 
 #ifndef IPV4_H
 #define IPV4_H
@@ -21,7 +20,7 @@ struct udp_header {
     uint16_t len;
     uint16_t checksum;
 };
-
+// Define the structure of a pseudo header
 struct pseudo_header {
     struct in_addr src;
     struct in_addr dest;
@@ -32,8 +31,8 @@ struct pseudo_header {
 
 // Function declarations
 
-uint16_t computeChecksum(const char *buffer, int len);
-std::string getSecretPhrase(const char* ip, int port, uint32_t signature);
+uint16_t computeChecksum(const char *buffer, int len); // computes the checksum
+std::string getSecretPhrase(const char* ip, int port, uint32_t signature); // gets the secret phrase
 // Add any other relevant functions, structs, or constants here...
 
 #endif // IPV4_H
