@@ -83,11 +83,11 @@ int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR) {
 	struct udphdr *udph = (struct udphdr *) (datagram + sizeof (struct ip));
 	
 	struct sockaddr_in sin; // fyrri destination
-	struct pseudo_header psh;
+	struct pseudo_header1 psh;
 	
 	//Data part
 	data = datagram + sizeof(struct iphdr) + sizeof(struct udphdr);
-	u_int32_t networkXOR = htonl(XOR); // Convert to network byte order þetta er S.E.C.R.E.T. XOR signature
+	u_int32_t networkXOR = XOR; // Convert to network byte order þetta er S.E.C.R.E.T. XOR signature
     memcpy(data, &networkXOR, sizeof(u_int32_t));
 	// Bý til dummy socket
 
@@ -160,12 +160,12 @@ int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR) {
 	psh.protocol = IPPROTO_UDP;
 	psh.udp_length = htons(sizeof(struct udphdr) + strlen(data) );
 	
-	int psize = sizeof(struct pseudo_header) + sizeof(struct udphdr) + strlen(data);
+	int psize = sizeof(struct pseudo_header1) + sizeof(struct udphdr) + strlen(data);
 	pseudogram = (char*) malloc(psize);
 
 	
-	memcpy(pseudogram , (char*) &psh , sizeof (struct pseudo_header));
-	memcpy(pseudogram + sizeof(struct pseudo_header) , udph , sizeof(struct udphdr) + strlen(data));
+	memcpy(pseudogram , (char*) &psh , sizeof (struct pseudo_header1));
+	memcpy(pseudogram + sizeof(struct pseudo_header1) , udph , sizeof(struct udphdr) + strlen(data));
 	
 	udph->check = csum( (unsigned short*) pseudogram , psize);
 

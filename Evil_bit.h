@@ -14,14 +14,14 @@
 #include <netinet/udp.h>
 #include <vector>
 
-struct udp_header {
+struct udp_h {
     uint16_t src_port;
     uint16_t dest_port;
     uint16_t len;
     uint16_t checksum;
 };
 
-struct pseudo_header {
+struct pseudo_header1 {
 	u_int32_t source_address;
 	u_int32_t dest_address;
 	u_int8_t placeholder;

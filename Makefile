@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -Wall -std=c++11
 
 TARGET = puzzle
-OBJS = puzzle.o Port_scanner.o Port_talker.o ipv4.o knock.o Evil_bit.o
+OBJS = puzzle.o Port_scanner.o Port_talker.o ipv4.o knock.o
 
 all: $(TARGET)
 
