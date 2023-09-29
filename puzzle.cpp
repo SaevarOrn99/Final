@@ -99,61 +99,61 @@ int main(int argc, char* argv[]) { // Main function
         return -1;
     }
     
-    std::cout << signaturePort << std::endl;
+    // std::cout << signaturePort << std::endl;
 
-    auto result = getSignature(ipAddress, signaturePort, secret, groupNo);
+    auto result = getSignature(ipAddress, signaturePort, secret, groupNo); // Gets the signature and secret port one
     
-    s.signature = result.second;
-    s.secretPortOne = result.first;
+    s.signature = result.second; // Assigns the signature to the struct
+    s.secretPortOne = result.first; // Assigns the secret port one to the struct
     
-    if (s.signature == 0 || s.secretPortOne == 0) {
-        std::cerr << "Error getting signature" << std::endl;
-        return -1;
+    if (s.signature == 0 || s.secretPortOne == 0) { // If the signature or the secret port one is 0
+        std::cerr << "Error getting signature" << std::endl; // Print error
+        return -1; // Return -1
     }
     
-    // Hér skilum við secret port twö
     std::cout << "\n ----------- Part 2: Get secret port no. 2 -----------\n" << std::endl;
     
 
-    int evilPort = getPort(openPorts, ipAddress, 4);
-    if (evilPort < 0) {
-        return -1;
+    int evilPort = getPort(openPorts, ipAddress, 4); // Getting port for part 2
+    if (evilPort < 0) { // If the port is less than 0
+        return -1; // Return -1
     }
-    int secretPortTwo = getUDPpackageRaw(ipAddress , evilPort, s.signature);
-    s.secretPortTwo = secretPortTwo;
-    std::cout << "Secret port two: " << secretPortTwo << std::endl;
-
-
+    int secretPortTwo = getUDPpackageRaw(ipAddress , evilPort, s.signature); // Gets the secret port two
+    s.secretPortTwo = secretPortTwo; // Assigns the secret port two to the struct
+    
+    if (s.secretPortTwo == 0) { // If the secret port two is 0
+        std::cerr << "Error getting secret port two" << std::endl; // Print error
+        return -1; // Return -1
+    }
+    
+    //std::cout << "Secret port two: " << secretPortTwo << std::endl;
 
     std::cout << "\n ----------- Part 3: Get the secret phrase -----------\n" << std::endl;
-    // Hér kemur virknin í ipv4.cpp og við skilum secret phrase
-    int secretPhrasePort = getPort(openPorts, ipAddress, 2);
-    std::string secretPhrase =  getSecretPhrase(ipAddress, secretPhrasePort, s.signature);
+    // Here comes the Checksum part
+    
+    int secretPhrasePort = getPort(openPorts, ipAddress, 2); // Getting port for part 3
+    std::string secretPhrase =  getSecretPhrase(ipAddress, secretPhrasePort, s.signature); // Gets the secret phrase
 
-    strncpy(s.secretPhrase, secretPhrase.c_str(), sizeof(s.secretPhrase) - 1);
+    strncpy(s.secretPhrase, secretPhrase.c_str(), sizeof(s.secretPhrase) - 1); // Copies the secret phrase to the struct
     s.secretPhrase[sizeof(s.secretPhrase) - 1] = '\0'; // here is the secret phrase
     
-    //if (secretPhrase == "error") {
-      //  return -1;
-    //}
-    //s.secretPhrase = secretPhrase;
-    
-    std::cout << "\n ----------- Part 4: Knocking on heaven's door -----------\n" << std::endl;
-    char secretPortBuffer[256];
-    snprintf(secretPortBuffer, sizeof(secretPortBuffer), "%d,%d", s.secretPortOne, s.secretPortTwo);
-    std::cout << "Portin splæsuð saman: " << secretPortBuffer << std::endl;
-    
-    int knockPort = getPort(openPorts, ipAddress, 3); // Getting port for part 4
-    if (knockPort < 0) {
-        return -1;
-    }
-    if (knockOnPort(ipAddress, knockPort, s.signature, s.secretPhrase, secretPortBuffer) < 0) {
+    if (secretPhrase == "error") {
         return -1;
     }
     
 
-    // hér bönkum við og klárum þetta
+    std::cout << "\n ----------- Part 4: Knocking on heaven's door -----------\n" << std::endl;
+
+    char secretPortBuffer[256]; // Secret port buffer
+    snprintf(secretPortBuffer, sizeof(secretPortBuffer), "%d,%d", s.secretPortOne, s.secretPortTwo); // Prints the secret port one and two to the secret port buffer
     
+    int knockPort = getPort(openPorts, ipAddress, 3); // Getting port for part 4
+    if (knockPort < 0) { // If the port is less than 0
+        return -1; // Return -1
+    }
+    if (knockOnPort(ipAddress, knockPort, s.signature, s.secretPhrase, secretPortBuffer) < 0) { // If the knocking on port fails
+        return -1;
+    }
 
     return 0;
 }
