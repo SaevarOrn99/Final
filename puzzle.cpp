@@ -10,10 +10,13 @@
 #include <sstream>
 #include <cstring> //tracks the string 
 #include <string>
+#include <cstdio>
 #include <vector>
 #include "Port_scanner.h"
 #include "Port_talker.h"
-#include "Evil_bit.h"
+#include "ipv4.h"
+#include "knock.h"
+
 
 struct secret {
     u_int32_t signature;
@@ -31,8 +34,6 @@ int getPort(std::vector<int> ports, const char* ip, int part) {
     } 
         // Look for the port that sends the 
     for (int port : ports) {
-        
-        std::cout << port << std::endl;
         struct sockaddr_in serverAddr;
         configureServerAddr(serverAddr, ip, port);
         if (!sendUDPMessage(udpsock, "Hi", strlen("Hi"), serverAddr)) {
@@ -52,8 +53,11 @@ int getPort(std::vector<int> ports, const char* ip, int part) {
                 std::cout << "\nReceived message from port " << port << ": " << recvBuffer << std::endl;
                 close(udpsock);
                 return port;
+            } else if (part == 3 && strstr(recvBuffer, "Greetings! I am E.X.P.S.T.N, which stands for \"Enhanced X-link Port Storage Transaction Node\".")) {
+                std::cout << "\nReceived message from port " << port << ": " << recvBuffer << std::endl;
+                close(udpsock);
+                return port;
             }
-            
         }
     }
     std::cerr << "Error getting port" << std::endl;
@@ -63,8 +67,8 @@ int getPort(std::vector<int> ports, const char* ip, int part) {
 
 
 int main(int argc, char* argv[]) {
-    uint8_t groupNo = 99; 
-    uint32_t secret = 0xbdcedd8c;
+    uint8_t groupNo = 99; // our group number
+    uint32_t secret = 0xbdcedd8c; // our group secret
     const char* ipAddress = argv[1];
     if (argc != 6) {
         std::cerr << "Usage: " << argv[0] << " <IP address> <port 1> <port 2> <port 3> <port 4>" << std::endl;
@@ -82,7 +86,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Port " << port << " is open" << std::endl;
     }
 
-    std::cout << "\n --------- Part 1: Get the secret signature ---------\n" << std::endl;
+    std::cout << "\n ----------- Part 1: Get secret port no. 1 -----------\n" << std::endl;
     // Hér kemur virknin úr Port_talker.cpp
 
     int signaturePort = getPort(openPorts, ipAddress, 1); //
@@ -96,19 +100,43 @@ int main(int argc, char* argv[]) {
     
     s.signature = result.second;
     s.secretPortOne = result.first;
-    std::cout << "signature&secretport: " << ntohl(s.signature) << " --- " << s.secretPortOne << std::endl;
+    s.secretPortTwo = 4070;
+    if (s.signature == 0 || s.secretPortOne == 0) {
+        std::cerr << "Error getting signature" << std::endl;
+        return -1;
+    }
+    
     // Hér skilum við secret port twö
+    std::cout << "\n ----------- Part 2: Get secret port no. 2 -----------\n" << std::endl;
+    //SÆÆÆÆÆVAAAAARRR
 
-    std::cout << "\n --------- Part 2: Get the secret phrase ---------\n" << std::endl;
+
+    std::cout << "\n ----------- Part 3: Get the secret phrase -----------\n" << std::endl;
     // Hér kemur virknin í ipv4.cpp og við skilum secret phrase
     int secretPhrasePort = getPort(openPorts, ipAddress, 2);
+    std::string secretPhrase =  getSecretPhrase(ipAddress, secretPhrasePort, s.signature);
 
-    int secretPortTwo = getUDPpackageRaw(ipAddress, 4001, s.signature); 
+    strncpy(s.secretPhrase, secretPhrase.c_str(), sizeof(s.secretPhrase) - 1);
+    s.secretPhrase[sizeof(s.secretPhrase) - 1] = '\0'; // here is the secret phrase
     
-
+    //if (secretPhrase == "error") {
+      //  return -1;
+    //}
+    //s.secretPhrase = secretPhrase;
     
-
-    // hér skilum við secret phrase
+    std::cout << "\n ----------- Part 4: Knocking on heaven's door -----------\n" << std::endl;
+    char secretPortBuffer[256];
+    snprintf(secretPortBuffer, sizeof(secretPortBuffer), "%d,%d", s.secretPortOne, s.secretPortTwo);
+    std::cout << "Portin splæsuð saman: " << secretPortBuffer << std::endl;
+    
+    int knockPort = getPort(openPorts, ipAddress, 3); // Getting port for part 4
+    if (knockPort < 0) {
+        return -1;
+    }
+    if (knockOnPort(ipAddress, knockPort, s.signature, s.secretPhrase, secretPortBuffer) < 0) {
+        return -1;
+    }
+    
 
     // hér bönkum við og klárum þetta
     

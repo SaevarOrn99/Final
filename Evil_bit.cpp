@@ -179,17 +179,15 @@ int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR) {
 
     std::cout << "Connected successfully to the server." << std::endl;
 
-
-	
-
 	// Continue looping until the expected message is received
 	char portStr[5]; // For extracting 4 characters plus null terminator
 	while (true) {
 		// Send the packet
-		if (sendto(raw_socket, datagram, iph->tot_len, 0, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
-			std::cerr << "Error: sendto failed with error number " << errno << ". " << std::strerror(errno) << std::endl;
+			if (sendto (raw_socket, datagram, iph->tot_len ,	0, (struct sockaddr *) &sin, sizeof (sin)) < 0)
+		{
+			perror("sendto failed");
 		} else {
-			std::cout << "Packet sent successfully. Length: " << iph->tot_len << std::endl;
+			printf ("Packet Send. Length : %d \n" , iph->tot_len);
 		}
 
 		// Receive a packet
@@ -206,11 +204,8 @@ int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR) {
 
 		// Check for the expected message using strstr()
 		if (strstr(buffer, "Yes, strong in the dark side you are")) {
-			
-			
 			strncpy(portStr, &buffer[bytesReceived - 4], 4);
 			portStr[4] = '\0';  // Null terminate the string
-			std::cout << "Port: " << portStr << std::endl;
 			break; // Exit the loop
 		}
 	}
