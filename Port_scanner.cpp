@@ -28,7 +28,7 @@ bool is_port_open(const char* ip, int port) {
     // Set timeout for socket to wait for a reply
     struct timeval timeout;
     timeout.tv_sec = 0;  // 1 second timeout
-    timeout.tv_usec = 100000;
+    timeout.tv_usec = 200000;
     
     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) { // bíði svona lengi eftir svari
         perror("Error setting options");

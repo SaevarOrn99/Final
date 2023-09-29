@@ -39,7 +39,7 @@ int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR) {
     configureServerAddr(serverAddr, ip, port);
 
 
-    if (!setSocketTimeout(udpsock, 0, 100000)) {
+    if (!setSocketTimeout(udpsock, 0, 200000)) {
         perror("Error setting options");
         close(udpsock); // Close the socket before returning
         return -1;

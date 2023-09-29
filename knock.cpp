@@ -21,7 +21,7 @@ int knockOnPort(const char* ipAddress, int port, uint32_t signature, const char*
     configureServerAddr(serverAddr, ipAddress, port);
 
     //Setting options for sockets
-    if (!setSocketTimeout(udpsock, 0, 100000)) {//Setting timeout to wait for a reply
+    if (!setSocketTimeout(udpsock, 0, 200000)) {//Setting timeout to wait for a reply
         perror("Error setting options");
         close(udpsock);
         return -1;

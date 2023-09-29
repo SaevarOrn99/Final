@@ -12,97 +12,98 @@
 #include "Port_talker.h"
 #include <string>
 
-int createUDPSocket() {
-    int udpsock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+int createUDPSocket() { // Creates a UDP socket
+    int udpsock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP); // creates a UDP Socket
     if (udpsock < 0) {
         perror("Error creating UDP socket ");
     }
     return udpsock;
 }
 
-void configureServerAddr(struct sockaddr_in &serverAddr, const char* ip, int port) {
-    memset(&serverAddr, 0, sizeof(serverAddr));
+void configureServerAddr(struct sockaddr_in &serverAddr, const char* ip, int port) { // Configures the server address
+    memset(&serverAddr, 0, sizeof(serverAddr)); 
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(port);
-    inet_pton(AF_INET, ip, &serverAddr.sin_addr);
+    serverAddr.sin_port = htons(port); // set the port number
+    inet_pton(AF_INET, ip, &serverAddr.sin_addr); 
 }
 
-bool setSocketTimeout(int socket, int seconds, int microseconds) {
+bool setSocketTimeout(int socket, int seconds, int microseconds) { // Sets the socket timeout
     struct timeval timeout;
     timeout.tv_sec = seconds;
     timeout.tv_usec = microseconds;
     return setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) >= 0;
 }
 
-bool sendUDPMessage(int udpsock, const char* msg, size_t msgSize, const struct sockaddr_in &serverAddr) {
-    return sendto(udpsock, msg, msgSize, 0, (const struct sockaddr*)&serverAddr, sizeof(serverAddr)) >= 0;
+bool sendUDPMessage(int udpsock, const char* msg, size_t msgSize, const struct sockaddr_in &serverAddr) { // Sends a UDP message 
+    return sendto(udpsock, msg, msgSize, 0, (const struct sockaddr*)&serverAddr, sizeof(serverAddr)) >= 0; 
 }
 
 
-int receiveUDPMessage(int udpsock, char *buffer, size_t bufSize, struct sockaddr_in &serverAddr) {
-    socklen_t addr_size = sizeof(serverAddr);
-    int bytes = recvfrom(udpsock, buffer, bufSize, 0, (struct sockaddr*)&serverAddr, &addr_size);
+int receiveUDPMessage(int udpsock, char *buffer, size_t bufSize, struct sockaddr_in &serverAddr) { // Receives a UDP message
+    socklen_t addr_size = sizeof(serverAddr); // Size of the address
+    int bytes = recvfrom(udpsock, buffer, bufSize, 0, (struct sockaddr*)&serverAddr, &addr_size); // Receive message
     if (bytes > 0) {
-        buffer[bytes] = '\0'; // Null-terminate the received string
+        buffer[bytes] = '\0'; // Null-terminate the received string 
     }
     return bytes;
 }
 
 
 
-
-std::pair<int, uint32_t> getSignature(const char* ip, int port, uint32_t secret, u_int8_t groupNo) {
-    int udpsock = createUDPSocket();
+// This gets a pair of the secret port and the signature
+std::pair<int, uint32_t> getSignature(const char* ip, int port, uint32_t secret, u_int8_t groupNo) { 
+    int udpsock = createUDPSocket(); // Creates a UDP socket
     if (udpsock < 0) return {0, 0};
-    u_int32_t signature;
-    struct sockaddr_in serverAddr;
-    configureServerAddr(serverAddr, ip, port);
+    u_int32_t signature; // Signature
+    struct sockaddr_in serverAddr; // Server address
+    configureServerAddr(serverAddr, ip, port); // Configures the server address
 
-    if (!setSocketTimeout(udpsock, 0, 100000)) {
+    if (!setSocketTimeout(udpsock, 0, 100000)) { // Sets the socket timeout
         perror("Error setting options");
-        close(udpsock);
-        return {0, 0};
+        close(udpsock); // Closes the socket
+        return {0, 0}; // Returns 0 
     }
     
-    if (sendto(udpsock, &groupNo, sizeof(groupNo), 0, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+    if (sendto(udpsock, &groupNo, sizeof(groupNo), 0, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) { // Sends the group number
         perror("Error sending group number");
-        close(udpsock);
-        return {-1, 0};
+        close(udpsock); // Closes the socket
+        return {-1, 0}; // Returns -1
     }
 
-    uint32_t fourByteChallenge; 
-    int msgBytes = receiveUDPMessage(udpsock, (char*) &fourByteChallenge, sizeof(fourByteChallenge), serverAddr);
-        
-    if (msgBytes == sizeof(fourByteChallenge)) {
-        fourByteChallenge = ntohl(fourByteChallenge);
+    uint32_t fourByteChallenge; // Four byte challenge
+    int msgBytes = receiveUDPMessage(udpsock, (char*) &fourByteChallenge, sizeof(fourByteChallenge), serverAddr); // Receives the four byte challenge
+         
+    if (msgBytes == sizeof(fourByteChallenge)) { // If the message bytes is equal to the size of the four byte challenge
+        fourByteChallenge = ntohl(fourByteChallenge); // Converts the four byte challenge to host byte order
         std::cout << "Received second message from port no. " << port << ": " << fourByteChallenge << std::endl;
         
 
         signature = fourByteChallenge ^ secret; // htonl(3164325502 ^ 0xbdcedd8c)
-        uint32_t new_signature = htonl(signature);
+        uint32_t new_signature = htonl(signature); 
 
-        uint8_t fiveByteMessage[5];
+        uint8_t fiveByteMessage[5]; // Five byte message
         fiveByteMessage[0] = groupNo; // Group number
-        memcpy(&fiveByteMessage[1], &new_signature, sizeof(new_signature));
+        memcpy(&fiveByteMessage[1], &new_signature, sizeof(new_signature)); // Copies the new signature to the five byte message
 
-        if (sendto(udpsock, fiveByteMessage, sizeof(fiveByteMessage), 0, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+        
+        if (sendto(udpsock, fiveByteMessage, sizeof(fiveByteMessage), 0, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) { // Sends the five byte message
             perror("Error sending signature");
             close(udpsock);
             return {-1, 0};
         }
 
-        char portBuffer[1024]; // 
-        int finalBytes = receiveUDPMessage(udpsock, portBuffer, sizeof(portBuffer), serverAddr);
+        char portBuffer[1024]; // Port buffer
+        int finalBytes = receiveUDPMessage(udpsock, portBuffer, sizeof(portBuffer), serverAddr); // Receives the final message
         if(finalBytes > 0) {
             int  secretPort = 0;
             sscanf(portBuffer, "Well done group %*d. You have earned the right to know the port: %d!", &secretPort); // ná í Port 4066
             std::cout << "Received final message from port no. " << port << ": " << portBuffer << "\n---------------------------------------------------\n" << std::endl;
-            close(udpsock);
-            return {secretPort, new_signature};
+            close(udpsock); // Closes the socket
+            return {secretPort, new_signature}; // Returns the secret port and the new signature
         } else {
-            std::cerr << "Failed to get final response." << std::endl;
-            close(udpsock);
-            return {-1, 0};
+            std::cerr << "Failed to get final response." << std::endl; // Prints out an error message
+            close(udpsock); // Closes the socket
+            return {-1, 0}; // Returns -1
         }  
     } else {
         std::cerr << "Failed to get second message." << std::endl;
@@ -110,6 +111,6 @@ std::pair<int, uint32_t> getSignature(const char* ip, int port, uint32_t secret,
         return {-1, 0};
     }
 
-    close(udpsock);
-    return {0, 0}; 
+    close(udpsock); // Closes the socket
+    return {0, 0}; // Returns 0
 }
