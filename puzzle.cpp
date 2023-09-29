@@ -90,6 +90,7 @@ int main(int argc, char* argv[]) {
     s.secretPortOne = result.first;
     s.signature = result.second;
     //s.secretPortOne = getSignature(ipAddress, signaturePort); // setur the secret port one jafnt og portið
+    std::cout << s.secretPortOne << std::endl;
     std::cout << s.signature << std::endl;
 
     // Hér skilum við signiture 
