@@ -51,24 +51,23 @@ int receiveUDPMessage(int udpsock, char *buffer, size_t bufSize, struct sockaddr
 
 
 
-std::pair<std::string, uint32_t> getSignature(const char* ip, int port, uint32_t secret, u_int8_t groupNumber) {
+std::pair<int, uint32_t> getSignature(const char* ip, int port, uint32_t secret, u_int8_t groupNo) {
     int udpsock = createUDPSocket();
-    if (udpsock < 0) return {"", 0};
+    if (udpsock < 0) return {0, 0};
     u_int32_t signature;
     struct sockaddr_in serverAddr;
     configureServerAddr(serverAddr, ip, port);
 
-    if (!setSocketTimeout(udpsock, 1, 0)) {
+    if (!setSocketTimeout(udpsock, 0, 100000)) {
         perror("Error setting options");
         close(udpsock);
-        return {"-1", 0};
+        return {0, 0};
     }
     
-    uint8_t groupNo = 99; 
     if (sendto(udpsock, &groupNo, sizeof(groupNo), 0, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
         perror("Error sending group number");
         close(udpsock);
-        return {"-1", 0};
+        return {-1, 0};
     }
 
     uint32_t fourByteChallenge; 
@@ -83,32 +82,34 @@ std::pair<std::string, uint32_t> getSignature(const char* ip, int port, uint32_t
         uint32_t new_signature = htonl(signature);
 
         uint8_t fiveByteMessage[5];
-        fiveByteMessage[0] = groupNumber; // Group number
+        fiveByteMessage[0] = groupNo; // Group number
         memcpy(&fiveByteMessage[1], &new_signature, sizeof(new_signature));
 
         if (sendto(udpsock, fiveByteMessage, sizeof(fiveByteMessage), 0, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
             perror("Error sending signature");
             close(udpsock);
-            return {"-1", 0};
+            return {-1, 0};
         }
 
-        char secretPort[1024]; // 
-        int finalBytes = receiveUDPMessage(udpsock, secretPort, sizeof(secretPort), serverAddr);
+        char portBuffer[1024]; // 
+        int finalBytes = receiveUDPMessage(udpsock, portBuffer, sizeof(portBuffer), serverAddr);
         if(finalBytes > 0) {
-            std::cout << "Received final message from port no. " << port << ": " << secretPort << "\n---------------------------------------------------\n" << std::endl;
+            int  secretPort = 0;
+            sscanf(portBuffer, "Well done group %*d. You have earned the right to know the port: %d!", &secretPort); // ná í Port 4066
+            std::cout << "Received final message from port no. " << port << ": " << portBuffer << "\n---------------------------------------------------\n" << std::endl;
             close(udpsock);
-            return {std::string(secretPort), new_signature};
+            return {secretPort, new_signature};
         } else {
             std::cerr << "Failed to get final response." << std::endl;
             close(udpsock);
-            return {"-1", 0};
+            return {-1, 0};
         }  
     } else {
         std::cerr << "Failed to get second message." << std::endl;
         close(udpsock);
-        return {"-1", 0};
+        return {-1, 0};
     }
 
     close(udpsock);
-    return {"0", 0}; 
+    return {0, 0}; 
 }

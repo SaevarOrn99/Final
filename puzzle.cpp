@@ -87,16 +87,13 @@ int main(int argc, char* argv[]) {
     }
     std::cout << signaturePort << std::endl;
     auto result = getSignature(ipAddress, signaturePort, secret, groupNo);
-    std::cout << "komst hingað" << std::endl;
-    std::cout << "Port " << result.first << " is open" << std::endl;
-    //s.secretPortOne = std::stoi(result.first);
+    s.secretPortOne = result.first;
     s.signature = result.second;
     //s.secretPortOne = getSignature(ipAddress, signaturePort); // setur the secret port one jafnt og portið
-    std::cout << s.secretPortOne << std::endl;
     std::cout << s.signature << std::endl;
 
     // Hér skilum við signiture 
-
+    
     // Hér skilum við secret port twö
 
     // hér skilum við secret phrase 

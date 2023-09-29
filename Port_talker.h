@@ -24,6 +24,6 @@ bool sendUDPMessage(int udpsock, const char* msg, size_t msgSize, const struct s
 
 int receiveUDPMessage(int udpsock, char *buffer, size_t bufSize, struct sockaddr_in &serverAddr);
 
-std::pair<std::string, uint32_t> getSignature(const char* ip, int port, uint32_t secret, u_int8_t groupNumber);
+std::pair<int, uint32_t> getSignature(const char* ip, int port, uint32_t secret, u_int8_t groupNumber);
 
 #endif // UDP_UTILITIES_H
