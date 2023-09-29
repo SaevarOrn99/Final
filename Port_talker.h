@@ -8,6 +8,7 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 #include <utility>
+#include <regex>
 #include <netinet/tcp.h>
 #include <iostream>
 #include <cstring>

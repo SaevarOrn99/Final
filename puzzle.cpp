@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include "Port_scanner.h"
+
 #include "Port_talker.h"
 
 struct secret {
@@ -86,9 +87,9 @@ int main(int argc, char* argv[]) {
     }
     std::cout << signaturePort << std::endl;
     auto result = getSignature(ipAddress, signaturePort, secret, groupNo);
-    
- 
-    s.secretPortOne = std::stoi(result.first);
+    std::cout << "komst hingað" << std::endl;
+    std::cout << "Port " << result.first << " is open" << std::endl;
+    //s.secretPortOne = std::stoi(result.first);
     s.signature = result.second;
     //s.secretPortOne = getSignature(ipAddress, signaturePort); // setur the secret port one jafnt og portið
     std::cout << s.secretPortOne << std::endl;

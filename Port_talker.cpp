@@ -5,6 +5,7 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
+#include <regex>
 #include <utility> // For std::pair
 #include <iostream> //declares objects that control reading from and writing to the standard streams
 #include <cstring> //tracks the string length for faster performance, but it also retains the NULL character in the stored character data to support conversion to LPCWSTR
@@ -54,7 +55,6 @@ std::pair<std::string, uint32_t> getSignature(const char* ip, int port, uint32_t
     int udpsock = createUDPSocket();
     if (udpsock < 0) return {"", 0};
     u_int32_t signature;
-    std::cout << "Komst hér inn" << std::endl;
     struct sockaddr_in serverAddr;
     configureServerAddr(serverAddr, ip, port);
 
