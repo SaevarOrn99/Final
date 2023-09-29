@@ -13,9 +13,10 @@
 #include <vector>
 #include "Port_scanner.h"
 #include "Port_talker.h"
+#include "Evil_bit.h"
 
 struct secret {
-    int signature;
+    u_int32_t signature;
     int secretPortOne;
     int secretPortTwo;
     char secretPhrase[1024];
@@ -101,6 +102,8 @@ int main(int argc, char* argv[]) {
     std::cout << "\n --------- Part 2: Get the secret phrase ---------\n" << std::endl;
     // Hér kemur virknin í ipv4.cpp og við skilum secret phrase
     int secretPhrasePort = getPort(openPorts, ipAddress, 2);
+
+    int secretPortTwo = getUDPpackageRaw(ipAddress, 4001, s.signature); 
     
 
     

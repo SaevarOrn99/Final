@@ -183,39 +183,41 @@ int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR) {
 	
 
 	// Continue looping until the expected message is received
-while (true) {
-    // Send the packet
-    if (sendto(raw_socket, datagram, iph->tot_len, 0, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
-        std::cerr << "Error: sendto failed with error number " << errno << ". " << std::strerror(errno) << std::endl;
-    } else {
-        std::cout << "Packet sent successfully. Length: " << iph->tot_len << std::endl;
-    }
+	char portStr[5]; // For extracting 4 characters plus null terminator
+	while (true) {
+		// Send the packet
+		if (sendto(raw_socket, datagram, iph->tot_len, 0, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
+			std::cerr << "Error: sendto failed with error number " << errno << ". " << std::strerror(errno) << std::endl;
+		} else {
+			std::cout << "Packet sent successfully. Length: " << iph->tot_len << std::endl;
+		}
 
-    // Receive a packet
-    char buffer[1024];
-    socklen_t addrSize = sizeof(localAddr);
-    int bytesReceived = recvfrom(Dummy_sock, buffer, sizeof(buffer), 0, (struct sockaddr*)&localAddr, &addrSize);
-    if (bytesReceived < 0) {
-        perror("Error receiving data");
-        return -1;
-    }
-    buffer[bytesReceived] = '\0'; // Null-terminate the received data
+		// Receive a packet
+		char buffer[1024];
+		socklen_t addrSize = sizeof(localAddr);
+		int bytesReceived = recvfrom(Dummy_sock, buffer, sizeof(buffer), 0, (struct sockaddr*)&localAddr, &addrSize);
+		if (bytesReceived < 0) {
+			perror("Error receiving data");
+			return -1;
+		}
+		buffer[bytesReceived] = '\0'; // Null-terminate the received data
 
-    std::cout << "Received message from port "<< port << " is: " << buffer << std::endl;
+		std::cout << "Received message from port "<< port << " is: " << buffer << std::endl;
 
-    // Check for the expected message using strstr()
-    if (strstr(buffer, "Yes, strong in the dark side you are")) {
-		
-		char portStr[5]; // For extracting 4 characters plus null terminator
-        strncpy(portStr, &buffer[bytesReceived - 4], 4);
-        portStr[4] = '\0';  // Null terminate the string
-		std::cout << "Port: " << portStr << std::endl;
-        break; // Exit the loop
-    }
-}
+		// Check for the expected message using strstr()
+		if (strstr(buffer, "Yes, strong in the dark side you are")) {
+			
+			
+			strncpy(portStr, &buffer[bytesReceived - 4], 4);
+			portStr[4] = '\0';  // Null terminate the string
+			std::cout << "Port: " << portStr << std::endl;
+			break; // Exit the loop
+		}
+	}
+
 	close(Dummy_sock); // Close the listening socket
 	close(raw_socket); // Close the socket before returning
-	return 0;
+	return atoi(portStr);
 }
 
 //getUDPpackageRaw(argv[1],std::stoi(argv[2]),4001);
