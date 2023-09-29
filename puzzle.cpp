@@ -13,6 +13,7 @@
 #include <vector>
 #include "Port_scanner.h"
 #include "Port_talker.h"
+#include "Evil_bit.h"
 
 struct secret {
     int signature; // Note: corrected spelling of "signature"
@@ -90,8 +91,6 @@ int main(int argc, char* argv[]) {
     s.signature = result.second; // skilar signature
     //s.secretPortOne = getSignature(ipAddress, signaturePort); // setur the secret port one jafnt og portið
     
-
-
 
 
     // Hér skilum við signiture 
