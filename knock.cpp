@@ -1,18 +1,3 @@
-//port 4066, 4070 and the phrase is 
-// "Ennyn Durin Aran Moria. Pedo Mellon a Minno. Im Narvi hain echant. Celebrimbor o Eregion teithant i thiw hin."
-// Extern er 4051
-// Röðin er 4066,4066,4066,4066,4066,4070 
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <netinet/ip.h>
-#include <vector>
-#include <iostream>
-#include <cstring>
-#include <sys/socket.h>
-#include <netinet/udp.h>
-#include <sstream>
-#include <vector>
-#include <string>
 #include "Port_talker.h"
 #include "knock.h"
 

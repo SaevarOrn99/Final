@@ -12,6 +12,7 @@
 #include <string>
 #include <cstdio>
 #include <vector>
+#include "Evil_bit.h"
 #include "Port_scanner.h"
 #include "Port_talker.h"
 #include "ipv4.h"
@@ -45,6 +46,7 @@ int getPort(std::vector<int> ports, const char* ip, int part) {
         char recvBuffer[1024] = "";
         int recvBytes = receiveUDPMessage(udpsock, recvBuffer, sizeof(recvBuffer), serverAddr);
         if (recvBytes > 0) {
+            std::cout << "Received message from port " << port << ": " << recvBuffer << std::endl;
             if (part == 1 && strstr(recvBuffer, "Greetings from S.E.C.R.E.T")) {
                 std::cout << "\nReceived message from port " << port << ": " << recvBuffer << std::endl;
                 close(udpsock);
@@ -54,6 +56,10 @@ int getPort(std::vector<int> ports, const char* ip, int part) {
                 close(udpsock);
                 return port;
             } else if (part == 3 && strstr(recvBuffer, "Greetings! I am E.X.P.S.T.N, which stands for \"Enhanced X-link Port Storage Transaction Node\".")) {
+                std::cout << "\nReceived message from port " << port << ": " << recvBuffer << std::endl;
+                close(udpsock);
+                return port;
+            } else if (part == 4 && strstr(recvBuffer, "The dark side of network programming is a pathway to many abilities")) {
                 std::cout << "\nReceived message from port " << port << ": " << recvBuffer << std::endl;
                 close(udpsock);
                 return port;
@@ -100,7 +106,7 @@ int main(int argc, char* argv[]) {
     
     s.signature = result.second;
     s.secretPortOne = result.first;
-    s.secretPortTwo = 4070;
+    
     if (s.signature == 0 || s.secretPortOne == 0) {
         std::cerr << "Error getting signature" << std::endl;
         return -1;
@@ -108,7 +114,16 @@ int main(int argc, char* argv[]) {
     
     // Hér skilum við secret port twö
     std::cout << "\n ----------- Part 2: Get secret port no. 2 -----------\n" << std::endl;
-    //SÆÆÆÆÆVAAAAARRR
+    
+
+    int evilPort = getPort(openPorts, ipAddress, 4);
+    if (evilPort < 0) {
+        return -1;
+    }
+    int secretPortTwo = getUDPpackageRaw(ipAddress , evilPort, s.signature);
+    s.secretPortTwo = secretPortTwo;
+    std::cout << "Secret port two: " << secretPortTwo << std::endl;
+
 
 
     std::cout << "\n ----------- Part 3: Get the secret phrase -----------\n" << std::endl;

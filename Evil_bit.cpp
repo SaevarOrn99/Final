@@ -1,6 +1,7 @@
 #include "Evil_bit.h" // For std::pair
 #include "Port_talker.h"
 
+
 unsigned short csum(unsigned short *ptr,int nbytes) 
 {
 	register long sum;
@@ -86,7 +87,7 @@ int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR) {
 	
 	//Data part
 	data = datagram + sizeof(struct iphdr) + sizeof(struct udphdr);
-	u_int32_t networkXOR = htonl(22354930); // Convert to network byte order þetta er S.E.C.R.E.T. XOR signature
+	u_int32_t networkXOR = htonl(XOR); // Convert to network byte order þetta er S.E.C.R.E.T. XOR signature
     memcpy(data, &networkXOR, sizeof(u_int32_t));
 	// Bý til dummy socket
 
