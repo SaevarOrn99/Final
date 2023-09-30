@@ -41,6 +41,9 @@ bool sendUDPMessage(int udpsock, const char* msg, size_t msgSize, const struct s
 
 
 int receiveUDPMessage(int udpsock, char *buffer, size_t bufSize, struct sockaddr_in &serverAddr) { // Receives a UDP message
+    if (!setSocketTimeout(udpsock, 0, 100000)) {
+        return -1;
+    }
     socklen_t addr_size = sizeof(serverAddr); // Size of the address
     int bytes = recvfrom(udpsock, buffer, bufSize, 0, (struct sockaddr*)&serverAddr, &addr_size); // Receive message
     if (bytes > 0) {
@@ -98,7 +101,7 @@ std::pair<int, uint32_t> getSignature(const char* ip, int port, uint32_t secret,
         if(finalBytes > 0) {
             int  secretPort = 0;
             sscanf(portBuffer, "Well done group %*d. You have earned the right to know the port: %d!", &secretPort); // ná í Port 4066
-            std::cout << "Received final message from port no. " << port << ": " << portBuffer << "\n---------------------------------------------------\n" << std::endl;
+            std::cout << "Received final message from port no. " << port << ": " << portBuffer << std::endl;
             close(udpsock); // Closes the socket
             return {secretPort, new_signature}; // Returns the secret port and the new signature
         } else {

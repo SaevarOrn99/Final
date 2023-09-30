@@ -189,7 +189,7 @@ std::string getSecretPhrase(const char* ip, int port, uint32_t signature) {
         // Now extract the secret phrase
         char secretPhrase[512];
         if (sscanf(recvBufferTwo, "Congratulations group 99! Here is the secret phrase: \"%[^\"]", secretPhrase) == 1) {
-            std::cout << "Secret Phrase: " << secretPhrase << std::endl;
+            std::cout << "\nSecret Phrase: " << secretPhrase << std::endl;
             return std::string(secretPhrase);
         }
         perror("failed to extract secret phrase.");

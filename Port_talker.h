@@ -13,6 +13,8 @@
 #include <iostream>  //declares objects that control reading from and writing to the standard streams
 #include <cstring> //tracks the string length for faster performance, but it also retains the NULL character in the stored character data to support conversion to LPCWSTR 
 #include <string> // defines the string structure
+#include <vector>
+#include <sstream>
 
 int createUDPSocket(); // creates a UDP socket
 

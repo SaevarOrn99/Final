@@ -42,7 +42,10 @@ int knockOnPort(const char* ipAddress, int port, uint32_t signature, const char*
         }
 
         receiveBuffer_two[receiveBytes_two] = '\0'; // Add null-terminator
-        std::cout << "Received sequence of knocks from port " << port << ": " << receiveBuffer_two<< std::endl;
+        std::string hexPort = std::to_string(port); // convert port from hex to string
+        std::cout << "Received sequence of knocks from port " << std::stoul(hexPort, nullptr, 16) << ": " << receiveBuffer_two << std::endl;
+
+
 
         // Now we have the order of knocks in the receiveBuffer_two
         // 1. Each "knock" must be paired with both a secret phrase and your unique S.E.C.R.E.T signature.
@@ -57,6 +60,7 @@ int knockOnPort(const char* ipAddress, int port, uint32_t signature, const char*
 
         for (int portToSend : ports) {
             serverAddr.sin_port = htons(portToSend);
+             std::string hexPort = std::to_string(portToSend); // convert port from hex to string
             
             if (sendto(udpsock, knockBuffer.data(), knockBuffer.size(), 0, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
                 perror("Error sending knock");
@@ -70,7 +74,7 @@ int knockOnPort(const char* ipAddress, int port, uint32_t signature, const char*
                 perror("Error receiving message after knocking");
             }
             receiveFromKnock[receiveKnockBytes] = '\0'; // Add null-terminator
-            std::cout << "Knocking on port " << portToSend <<  ": " << receiveFromKnock << "\n" << std::endl;
+            std::cout << "Knocking on port " << std::stoul(hexPort, nullptr, 16) <<  ": " << receiveFromKnock << "\n" << std::endl;
         }
     close(udpsock);
     return 0; //The port is closed
