@@ -2,14 +2,14 @@
 #include "Port_talker.h"
 
 
-unsigned short csum(unsigned short *ptr,int nbytes) 
+unsigned short csum(unsigned short *ptr,int nbytes) //calculates the checksum
 {
-	register long sum;
+	register long sum; 
 	unsigned short oddbyte;
 	register short answer;
 
 	sum=0;
-	while(nbytes>1) {
+	while(nbytes>1) { // This loops through the packet and sums up the bytes
 		sum+=*ptr++;
 		nbytes-=2;
 	}
@@ -19,7 +19,7 @@ unsigned short csum(unsigned short *ptr,int nbytes)
 		sum+=oddbyte;
 	}
 
-	sum = (sum>>16)+(sum & 0xffff);
+	sum = (sum>>16)+(sum & 0xffff); 
 	sum = sum + (sum>>16);
 	answer=(short)~sum;
 	
@@ -27,25 +27,26 @@ unsigned short csum(unsigned short *ptr,int nbytes)
 }	
 
 
-// Þetta er raw port dæmi
-
+// Creates a raw socket and sends a UDP packet to the specified port
+// Then uses a dummy socket that connects to a server and receives a message
 int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR) {
 	
 	//Create a UDP socket to send to the port Hi
-	int udpsock = createUDPSocket();
-    if (udpsock < 0) return -1;
+	int udpsock = createUDPSocket(); // Creates a UDP socket
+    if (udpsock < 0) return -1; 
 
     struct sockaddr_in serverAddr;
     configureServerAddr(serverAddr, ip, port);
 
 
-    if (!setSocketTimeout(udpsock, 0, 200000)) {
-        perror("Error setting options");
+    if (!setSocketTimeout(udpsock, 0, 200000)) { // Set the socket timeout to 200 ms
+        perror("Error setting options"); 
         close(udpsock); // Close the socket before returning
         return -1;
     }
-
-    if (!sendUDPMessage(udpsock, "Hi", strlen("Hi"), serverAddr)) {
+    
+	// Sends the message Hi to the server
+    if (!sendUDPMessage(udpsock, "Hi", strlen("Hi"), serverAddr)) { 
         perror("Error sending data");
         close(udpsock); // Close the socket before returning
         return -1;
@@ -89,8 +90,9 @@ int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR) {
 	data = datagram + sizeof(struct iphdr) + sizeof(struct udphdr);
 	u_int32_t networkXOR = XOR; // Convert to network byte order þetta er S.E.C.R.E.T. XOR signature
     memcpy(data, &networkXOR, sizeof(u_int32_t));
-	// Bý til dummy socket
-
+	
+	
+	//Create dummy socket
 	int Dummy_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (Dummy_sock < 0) {
         perror("Error creating UDP socket");

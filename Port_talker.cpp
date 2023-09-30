@@ -34,6 +34,7 @@ bool setSocketTimeout(int socket, int seconds, int microseconds) { // Sets the s
     return setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) >= 0;
 }
 
+// Function that sends an UDP messages
 bool sendUDPMessage(int udpsock, const char* msg, size_t msgSize, const struct sockaddr_in &serverAddr) { // Sends a UDP message 
     return sendto(udpsock, msg, msgSize, 0, (const struct sockaddr*)&serverAddr, sizeof(serverAddr)) >= 0; 
 }

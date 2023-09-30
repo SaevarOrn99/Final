@@ -12,11 +12,11 @@
 #include <string>
 #include <cstdio>
 #include <vector>
-#include "Evil_bit.h"
 #include "Port_scanner.h"
 #include "Port_talker.h"
 #include "ipv4.h"
 #include "knock.h"
+#include "Evil_bit.h"
 
 
 struct secret { // Struct for the secret for 
@@ -43,10 +43,10 @@ int getPort(std::vector<int> ports, const char* ip, int part) { // Gets the port
             close(udpsock); // Close the socket before returning
             continue; // continue to the next port
         }
-        
         // checks the port for the message and assigns each part to the correct port
         char recvBuffer[1024] = ""; // Receive buffer
         int recvBytes = receiveUDPMessage(udpsock, recvBuffer, sizeof(recvBuffer), serverAddr); // Receive message
+        std::cout << recvBuffer << std::endl;
         if (recvBytes > 0) { // If the message is received
             if (part == 1 && strstr(recvBuffer, "Greetings from S.E.C.R.E.T")) { // If the message is the first part 
                 std::cout << "\nReceived message from port " << port << ": " << recvBuffer << std::endl; // Print the message
@@ -101,33 +101,32 @@ int main(int argc, char* argv[]) { // Main function
     
     // std::cout << signaturePort << std::endl;
 
-    auto result = getSignature(ipAddress, signaturePort, secret, groupNo); // Gets the signature and secret port one
+    auto result = getSignature(ipAddress, signaturePort, secret, groupNo); // Gets the signature and a secret port
     
     s.signature = result.second; // Assigns the signature to the struct
     s.secretPortOne = result.first; // Assigns the secret port one to the struct
     
     if (s.signature == 0 || s.secretPortOne == 0) { // If the signature or the secret port one is 0
         std::cerr << "Error getting signature" << std::endl; // Print error
-        return -1; // Return -1
+        return -1; 
     }
     
     std::cout << "\n ----------- Part 2: Get secret port no. 2 -----------\n" << std::endl;
     
-
+    
     int evilPort = getPort(openPorts, ipAddress, 4); // Getting port for part 2
     if (evilPort < 0) { // If the port is less than 0
-        return -1; // Return -1
+        return -1; 
     }
     int secretPortTwo = getUDPpackageRaw(ipAddress , evilPort, s.signature); // Gets the secret port two
     s.secretPortTwo = secretPortTwo; // Assigns the secret port two to the struct
     
     if (s.secretPortTwo == 0) { // If the secret port two is 0
         std::cerr << "Error getting secret port two" << std::endl; // Print error
-        return -1; // Return -1
+        return -1; 
     }
     
-    //std::cout << "Secret port two: " << secretPortTwo << std::endl;
-
+    
     std::cout << "\n ----------- Part 3: Get the secret phrase -----------\n" << std::endl;
     // Here comes the Checksum part
     
@@ -149,7 +148,7 @@ int main(int argc, char* argv[]) { // Main function
     
     int knockPort = getPort(openPorts, ipAddress, 3); // Getting port for part 4
     if (knockPort < 0) { // If the port is less than 0
-        return -1; // Return -1
+        return -1;
     }
     if (knockOnPort(ipAddress, knockPort, s.signature, s.secretPhrase, secretPortBuffer) < 0) { // If the knocking on port fails
         return -1;
