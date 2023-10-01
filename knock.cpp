@@ -1,19 +1,20 @@
+// Authors: Katrín Ósk Kristinsdóttir and Sævar Örn Valsson
 #include "Port_talker.h"
 #include "knock.h"
 
-std::vector<int> getPortsList(const std::string& s) {
-    std::vector<int> ports;
-    std::stringstream stream(s);
-    std::string item;
+std::vector<int> getPortsList(const std::string& s) { // Gets a list of ports from a string
+    std::vector<int> ports; // Vector to store the ports
+    std::stringstream stream(s); // Create a stringstream from the string
+    std::string item; // String to store the item
 
-    while (getline(stream, item, ',')) {
-        ports.push_back(std::stoi(item));
+    while (getline(stream, item, ',')) { // Split the string by commas
+        ports.push_back(std::stoi(item)); // Add the port to the vector
     }
     return ports;
 }
-
-int knockOnPort(const char* ipAddress, int port, uint32_t signature, const char* secretPhrase, const char* secretPorts) {
-    int udpsock = createUDPSocket();
+// Knocks on a port in specific order
+int knockOnPort(const char* ipAddress, int port, uint32_t signature, const char* secretPhrase, const char* secretPorts) { 
+    int udpsock = createUDPSocket(); // Creates a UDP socket
 
     //Configure settings in address struct
     struct sockaddr_in serverAddr;
@@ -27,13 +28,13 @@ int knockOnPort(const char* ipAddress, int port, uint32_t signature, const char*
         return -1;
     }
         //Sending secret ports as a string, comma separated
-        if (sendto(udpsock, secretPorts, strlen(secretPorts), 0, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+        if (sendto(udpsock, secretPorts, strlen(secretPorts), 0, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) { // Send the secret ports
             perror("Error sending Ports");
             return -1;
         }
         //Receiving 
         char receiveBuffer_two[1024];
-        int receiveBytes_two = recvfrom(udpsock, receiveBuffer_two, 1024, 0, (struct sockaddr*)&serverAddr, &addr_size);
+        int receiveBytes_two = recvfrom(udpsock, receiveBuffer_two, 1024, 0, (struct sockaddr*)&serverAddr, &addr_size); // Receive data
 
         //Check if we have received anything from the port, if so return true, the port is open
         if (receiveBytes_two < 0) {
@@ -53,13 +54,13 @@ int knockOnPort(const char* ipAddress, int port, uint32_t signature, const char*
         std::vector<int> ports = getPortsList(receiveBuffer_two); // A list of all the ports to knock on in the correct order
 
         // Construct the packet to send with the knocks
-        size_t bufferSize = sizeof(signature) + strlen(secretPhrase);
-        std::vector<uint8_t> knockBuffer(bufferSize);
-        memcpy(knockBuffer.data(), &signature, sizeof(signature));
-        memcpy(knockBuffer.data() + sizeof(signature), secretPhrase, strlen(secretPhrase));
+        size_t bufferSize = sizeof(signature) + strlen(secretPhrase); // Size of the buffer to send
+        std::vector<uint8_t> knockBuffer(bufferSize); // Buffer to send
+        memcpy(knockBuffer.data(), &signature, sizeof(signature)); // Copy the signature into the buffer
+        memcpy(knockBuffer.data() + sizeof(signature), secretPhrase, strlen(secretPhrase)); // Copy the secret phrase into the buffer 
 
-        for (int portToSend : ports) {
-            serverAddr.sin_port = htons(portToSend);
+        for (int portToSend : ports) { // Loop through all the ports to knock on
+            serverAddr.sin_port = htons(portToSend); // Assigns the port to the sin struct
              std::string hexPort = std::to_string(portToSend); // convert port from hex to string
             
             if (sendto(udpsock, knockBuffer.data(), knockBuffer.size(), 0, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {

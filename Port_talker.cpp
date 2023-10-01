@@ -21,10 +21,10 @@ int createUDPSocket() { // Creates a UDP socket
 }
 
 void configureServerAddr(struct sockaddr_in &serverAddr, const char* ip, int port) { // Configures the server address
-    memset(&serverAddr, 0, sizeof(serverAddr)); 
-    serverAddr.sin_family = AF_INET;
+    memset(&serverAddr, 0, sizeof(serverAddr));  // Zero out memory of address struct
+    serverAddr.sin_family = AF_INET; // IPv4
     serverAddr.sin_port = htons(port); // set the port number
-    inet_pton(AF_INET, ip, &serverAddr.sin_addr); 
+    inet_pton(AF_INET, ip, &serverAddr.sin_addr); // set the ip address 
 }
 
 bool setSocketTimeout(int socket, int seconds, int microseconds) { // Sets the socket timeout
@@ -64,14 +64,14 @@ std::pair<int, uint32_t> getSignature(const char* ip, int port, uint32_t secret,
 
     if (!setSocketTimeout(udpsock, 0, 100000)) { // Sets the socket timeout
         perror("Error setting options");
-        close(udpsock); // Closes the socket
-        return {0, 0}; // Returns 0 
+        close(udpsock); 
+        return {0, 0};  
     }
     
     if (sendto(udpsock, &groupNo, sizeof(groupNo), 0, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) { // Sends the group number
         perror("Error sending group number");
-        close(udpsock); // Closes the socket
-        return {-1, 0}; // Returns -1
+        close(udpsock); 
+        return {-1, 0}; 
     }
 
     uint32_t fourByteChallenge; // Four byte challenge
@@ -106,8 +106,8 @@ std::pair<int, uint32_t> getSignature(const char* ip, int port, uint32_t secret,
             return {secretPort, new_signature}; // Returns the secret port and the new signature
         } else {
             std::cerr << "Failed to get final response." << std::endl; // Prints out an error message
-            close(udpsock); // Closes the socket
-            return {-1, 0}; // Returns -1
+            close(udpsock); 
+            return {-1, 0}; 
         }  
     } else {
         std::cerr << "Failed to get second message." << std::endl;
@@ -115,6 +115,6 @@ std::pair<int, uint32_t> getSignature(const char* ip, int port, uint32_t secret,
         return {-1, 0};
     }
 
-    close(udpsock); // Closes the socket
-    return {0, 0}; // Returns 0
+    close(udpsock); 
+    return {0, 0}; 
 }

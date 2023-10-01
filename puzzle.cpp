@@ -1,3 +1,6 @@
+// Authors: Katrín Ósk Kristinsdóttir and Sævar Örn Valsson
+
+
 #include <cstdlib>
 #include <unistd.h> // this header defines miscellaneous symbolic constants and types, and declares miscellaneous functions
 #include <sys/socket.h> // defines the following macros to gain access to the data arrays in the ancillary data associated with a message header
@@ -48,12 +51,12 @@ int getPort(std::vector<int> ports, const char* ip, int part) { // Gets the port
         if (recvBytes > 0) { // If the message is received
             if (part == 1 && strstr(recvBuffer, "Greetings from S.E.C.R.E.T")) { // If the message is the first part 
                 std::cout << "\nReceived message from port " << port << ": " << recvBuffer << std::endl; // Print the message
-                close(udpsock); // Close the socket before returning
-                return port; // Return the port
+                close(udpsock); 
+                return port; 
             } else if (part == 2 && strstr(recvBuffer, "Send me a 4-byte message containing the signature you got from S.E.C.R.E.T in the first 4 bytes (in network byte order).")) {
                 std::cout << "\nReceived message from port " << port << ": " << recvBuffer << std::endl;
-                close(udpsock); // Close the socket before returning
-                return port; // Return the port
+                close(udpsock); 
+                return port; // 
             } else if (part == 3 && strstr(recvBuffer, "Greetings! I am E.X.P.S.T.N, which stands for \"Enhanced X-link Port Storage Transaction Node\".")) {
                 std::string hexPort = std::to_string(port); 
                 std::cout << "\nReceived message from port " << std::stoul(hexPort, nullptr, 16) << ": " << recvBuffer << std::endl;
@@ -114,13 +117,13 @@ int main(int argc, char* argv[]) { // Main function
     
     
     int evilPort = getPort(openPorts, ipAddress, 4); // Getting port for part 2
-    if (evilPort < 0) { // If the port is less than 0
+    if (evilPort < 0) {
         return -1; 
     }
     int secretPortTwo = getUDPpackageRaw(ipAddress , evilPort, s.signature); // Gets the secret port two
     s.secretPortTwo = secretPortTwo; // Assigns the secret port two to the struct
     
-    if (s.secretPortTwo == 0) { // If the secret port two is 0
+    if (s.secretPortTwo == 0) { // If the secret port two is 0, which is an error
         std::cerr << "Error getting secret port two" << std::endl; // Print error
         return -1; 
     }
@@ -149,8 +152,9 @@ int main(int argc, char* argv[]) { // Main function
     if (knockPort < 0) { // If the port is less than 0
         return -1;
     }
-    if (knockOnPort(ipAddress, knockPort, s.signature, s.secretPhrase, secretPortBuffer) < 0) { // If the knocking on port fails
-        return -1;
+    // Final function. knocking on the final ports to win the puzzle
+    if (knockOnPort(ipAddress, knockPort, s.signature, s.secretPhrase, secretPortBuffer) < 0) { 
+        return -1; // If the knocking on port fails
     }
 
     return 0;

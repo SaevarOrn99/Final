@@ -1,3 +1,4 @@
+// Authors: Katrín Ósk Kristinsdóttir and Sævar Örn Valsson
 #include "Evil_bit.h" // For std::pair
 #include "Port_talker.h"
 
