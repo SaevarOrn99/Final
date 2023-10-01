@@ -16,7 +16,7 @@
 #include "Port_talker.h"
 #include "ipv4.h"
 #include "knock.h"
-//#include "Evil_bit.h"
+#include "Evil_bit.h"
 
 
 struct secret { // Struct for the secret for 
@@ -112,17 +112,17 @@ int main(int argc, char* argv[]) { // Main function
     std::cout << "\n ----------- Part 2: Get secret port no. 2 -----------\n" << std::endl;
     
     
-    //int evilPort = getPort(openPorts, ipAddress, 4); // Getting port for part 2
-    //if (evilPort < 0) { // If the port is less than 0
-      //  return -1; 
-   // }
-   // int secretPortTwo = getUDPpackageRaw(ipAddress , evilPort, s.signature); // Gets the secret port two
-    s.secretPortTwo = 4070; // Assigns the secret port two to the struct
+    int evilPort = getPort(openPorts, ipAddress, 4); // Getting port for part 2
+    if (evilPort < 0) { // If the port is less than 0
+        return -1; 
+    }
+    int secretPortTwo = getUDPpackageRaw(ipAddress , evilPort, s.signature); // Gets the secret port two
+    s.secretPortTwo = secretPortTwo; // Assigns the secret port two to the struct
     
-   // if (s.secretPortTwo == 0) { // If the secret port two is 0
-   //     std::cerr << "Error getting secret port two" << std::endl; // Print error
-    //    return -1; 
-   // }
+    if (s.secretPortTwo == 0) { // If the secret port two is 0
+        std::cerr << "Error getting secret port two" << std::endl; // Print error
+        return -1; 
+    }
     
     
     std::cout << "\n ----------- Part 3: Get the secret phrase -----------\n" << std::endl;
