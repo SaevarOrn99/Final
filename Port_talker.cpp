@@ -1,3 +1,4 @@
+// Authors: Katrín Ósk Kristinsdóttir and Sævar Örn Valsson
 #include <cstdlib>
 #include <unistd.h> // this header defines miscellaneous symbolic constants and types, and declares miscellaneous functions
 #include <sys/socket.h> // defines the following macros to gain access to the data arrays in the ancillary data associated with a message header
