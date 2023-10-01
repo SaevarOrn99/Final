@@ -55,7 +55,8 @@ int getPort(std::vector<int> ports, const char* ip, int part) { // Gets the port
                 close(udpsock); // Close the socket before returning
                 return port; // Return the port
             } else if (part == 3 && strstr(recvBuffer, "Greetings! I am E.X.P.S.T.N, which stands for \"Enhanced X-link Port Storage Transaction Node\".")) {
-                std::cout << "\nReceived message from port " << port << ": " << recvBuffer << std::endl;
+                std::string hexPort = std::to_string(port); 
+                std::cout << "\nReceived message from port " << std::stoul(hexPort, nullptr, 16) << ": " << recvBuffer << std::endl;
                 close(udpsock); 
                 return port;
             } else if (part == 4 && strstr(recvBuffer, "The dark side of network programming is a pathway to many abilities")) {

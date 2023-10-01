@@ -217,5 +217,3 @@ int getUDPpackageRaw(const char* ip, int port, u_int32_t XOR) {
 	close(raw_socket); // Close the socket before returning
 	return atoi(portStr);
 }
-
-//getUDPpackageRaw(argv[1],std::stoi(argv[2]),4001);
